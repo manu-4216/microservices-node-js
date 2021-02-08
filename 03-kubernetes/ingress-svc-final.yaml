@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-srv
+  annotations:
+    kubernetes.io/ingress.class: nginx # needed for ingres-nginx
+    nginx.ingress.kubernetes.io/use-regex: 'true' # allow use of regular expression in the paths
+spec:
+  rules:
+    - host: posts.com # only useful for dev environment, for easy access. In the production application, this will be something like `tesla.posts
+      http:
+        paths:
+          - path: /posts/create # posts.com/posts/create will point to posts cluster IP service
+            backend:
+              serviceName: posts-cluster-ip-srv
+              servicePort: <clusterIPPort>
+          - path: /posts
+            backend:
+              serviceName: query-cluster-ip-srv
+              servicePort: <clusterIPPort>
+          - path: /posts/?(.*)/comments # use regular expression nginx style. Needs 2nd annotation on top
+            backend:
+              serviceName: comments-cluster-ip-srv
+              servicePort: <clusterIPPort>
+          - path: /?(.*) # allow typical react SPA needs to use client-side routing. Put it at the end, to match last !
+            backend:
+              serviceName: client-cluster-ip-srv
+              servicePort: <clusterIPPort>
